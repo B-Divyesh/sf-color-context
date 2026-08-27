@@ -1,0 +1,12 @@
+{
+  "title": "Color garden empty-state illustration",
+  "useCase": "stylized-concept",
+  "generator": "/opt/fleet/lib/gen-image.sh",
+  "deployment": "factory-image",
+  "generatedAt": "2026-08-27",
+  "size": "1536x1024",
+  "quality": "high",
+  "prompt": "Surreal editorial paper-cut landscape for an accessibility utility, oversized unlabeled chart wedges and circular status lights become hills and moons, a central eye-shaped viewing portal reveals bold black-and-ivory hatch textures underneath the colored paper, several tiny blank mapping flags punctuate the scene, torn archival paper, matte ink, restrained halftone grain, crisp collage edges, soft raking studio light, midnight ink and warm ivory with acid chartreuse, muted violet and a touch of terracotta, landscape composition weighted right with calm negative space left, sophisticated independent magazine art direction, no people, no interface, no words, no letters, no numbers, no logos, no watermark, no rainbow gradient",
+  "review": "Accepted first candidate: no text, watermark, logo, unintended symbols, seams, people, or misleading interface imagery. Negative space and texture portal match the product thesis.",
+  "license": "Original AI-generated asset commissioned for this product; distributable with the project."
+}

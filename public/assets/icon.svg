@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Color Context eye and texture mark</title>
+  <rect width="512" height="512" rx="108" fill="#15161c"/>
+  <path d="M55 256c50-86 116-129 201-129s151 43 201 129c-50 86-116 129-201 129S105 342 55 256Z" fill="#f5f0e5" stroke="#f5f0e5" stroke-width="20" stroke-linejoin="round"/>
+  <clipPath id="iris"><circle cx="256" cy="256" r="92"/></clipPath>
+  <circle cx="256" cy="256" r="92" fill="#c7f23a" stroke="#15161c" stroke-width="18"/>
+  <g clip-path="url(#iris)" stroke="#15161c" stroke-width="13">
+    <path d="m145 298 172-172M166 336 355 147M205 365l172-172M135 252 264 123M250 390l142-142"/>
+  </g>
+  <circle cx="382" cy="132" r="38" fill="#6348d9" stroke="#f5f0e5" stroke-width="12"/>
+</svg>

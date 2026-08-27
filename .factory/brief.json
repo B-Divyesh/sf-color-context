@@ -1,0 +1,30 @@
+{
+  "slug": "color-context",
+  "title": "Color Context",
+  "territory": "utilities",
+  "user": "People with color-vision deficiency who need to understand charts, status indicators, and marked-up documents when color alone carries important meaning.",
+  "evidence": [
+    {
+      "url": "https://hn.algolia.com/api/v1/items/48049346",
+      "date": "2026-05-07",
+      "quote_or_summary": "The asker says OS and game color-correction settings do not cover the full spectrum of color blindness and asks technical users how they cope with screens."
+    },
+    {
+      "url": "https://lobste.rs/s/dxbotl",
+      "date": "2020-11-18",
+      "quote_or_summary": "The discussion covers renderer-level simulation of several color-vision deficiencies, illustrating that simulation exists while interpretation of a particular visual cue is still left to the user."
+    }
+  ],
+  "recurrence": "A 2026 direct request identifies broad correction as insufficient; visual-only meaning creates ongoing errors rather than a one-time inconvenience.",
+  "current_workaround": "Use OS color filters, ask a colleague, take a screenshot into a simulator, or avoid interfaces that rely on color.",
+  "incumbents_and_gap": "macOS/Windows filters, Color Oracle, and Chrome DevTools simulate or shift palettes. They do not let a user click a sampled region and attach a durable personal label such as 'warning' or 'the red series' to a local image/PDF view.",
+  "smallest_useful_product": "A local image/PDF viewer with sampled-color callouts, high-contrast texture overlays, user labels, and exportable annotated screenshots. Non-goals: diagnosing color vision, recoloring third-party live UIs, or claiming universal color correction.",
+  "success_measure": "In a 15-user task set, participants correctly identify 90% of color-only legend/status meanings after annotating, versus their baseline task accuracy.",
+  "artifact_class": "pwa-offline",
+  "monetization": "free — a small local accessibility utility benefits from frictionless availability and does not need user data.",
+  "constraints": "No medical claims; annotations remain local unless explicitly exported; preserve the original image and disclose that overlays cannot recover missing semantic information.",
+  "est_build_effort": "S",
+  "why_distinct": "It helps users record and recover the meaning of a specific cue, rather than merely simulating color blindness or applying a global tint.",
+  "confidence": 4,
+  "state": "RESEARCHED"
+}
