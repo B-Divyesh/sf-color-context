@@ -70,6 +70,7 @@ test('reloads the app shell and saved workspace offline', async ({ page, context
   await expect(page.locator('#document-canvas')).toBeVisible();
   await page.reload();
   await page.evaluate(() => navigator.serviceWorker.ready);
+  await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
   await context.setOffline(true);
   await page.reload();
   await expect(page.getByRole('heading', { name: 'On this device' })).toBeVisible();
