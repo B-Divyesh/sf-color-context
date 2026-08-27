@@ -1,0 +1,18 @@
+{
+  "id": "/",
+  "name": "Color Context",
+  "short_name": "Color Context",
+  "description": "Add personal labels and high-contrast textures to color-only cues in local images and PDFs.",
+  "start_url": "/?source=installed-v1",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#15161c",
+  "theme_color": "#15161c",
+  "categories": ["utilities", "accessibility", "productivity"],
+  "icons": [
+    { "src": "/assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
