@@ -1,5 +1,13 @@
 # Color Context v1 handoff
 
+## Independent QA verification (2026-08-28 UTC) — **FAIL**
+
+Candidate `38a5464045026c8838f17920b6436f91a809945a` was rebuilt and independently exercised against the byte-identical live deployment at <https://color-context.sociobot.in/>. Core image/PDF annotation, keyboard, export/import, invalid-input recovery, 50 MiB boundary, 390 px layout, axe, reduced motion, privacy/outbound requests, local persistence, and offline service-worker reload passed. `npm ci`, `npm test` (3 Vitest + 4 Playwright after installing the repository's required Chromium), `npm run build`, and `npm audit --omit=dev` passed.
+
+The release nevertheless **FAILS** acceptance because deployment serves hashed static assets with `Cache-Control: public, must-revalidate, max-age=30` rather than long-lived immutable caching. It also omits CSP, Permissions-Policy, and frame protection, and serves the web manifest as `application/octet-stream`. These live headers were confirmed after matching the candidate's HTML, manifest, service worker, JS, CSS, and lazy PDF asset SHA-256 hashes to production.
+
+See [`.factory/verification.md`](verification.md) for commands, complete evidence, and P2/P3 remediation requirements. No product code was modified by the verifier.
+
 ## Shipped
 
 - A responsive local image/PDF workbench for the brief’s real job: users sample a rendered cue, name its meaning, and bind it to one of six distinct monochrome textures.
