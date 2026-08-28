@@ -10,7 +10,9 @@
     "test": "vitest run && playwright test",
     "test:unit": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "pdfjs-dist": "^6.2.108"

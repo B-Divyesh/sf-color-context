@@ -1,12 +1,37 @@
-# Color Context v1 handoff
+# Color Context v1 repair handoff
 
-## Independent QA verification (2026-08-28 UTC) — **FAIL**
+## Release-blocking QA repair (2026-08-28 UTC)
 
-Candidate `38a5464045026c8838f17920b6436f91a809945a` was rebuilt and independently exercised against the byte-identical live deployment at <https://color-context.sociobot.in/>. Core image/PDF annotation, keyboard, export/import, invalid-input recovery, 50 MiB boundary, 390 px layout, axe, reduced motion, privacy/outbound requests, local persistence, and offline service-worker reload passed. `npm ci`, `npm test` (3 Vitest + 4 Playwright after installing the repository's required Chromium), `npm run build`, and `npm audit --omit=dev` passed.
+This repair starts from the independently verified candidate `38a5464045026c8838f17920b6436f91a809945a` and fixes every finding in [`.factory/verification.md`](verification.md) without changing the annotation product behavior that passed QA.
 
-The release nevertheless **FAILS** acceptance because deployment serves hashed static assets with `Cache-Control: public, must-revalidate, max-age=30` rather than long-lived immutable caching. It also omits CSP, Permissions-Policy, and frame protection, and serves the web manifest as `application/octet-stream`. These live headers were confirmed after matching the candidate's HTML, manifest, service worker, JS, CSS, and lazy PDF asset SHA-256 hashes to production.
+- Added `public/staticwebapp.config.json`, the Azure Static Web Apps deployment configuration. It is copied to `dist/` and replaces the deploy helper's insecure fallback configuration.
+- `/assets/*` now receives `Cache-Control: public, max-age=31536000, immutable`, including Vite's content-hashed JavaScript and CSS.
+- `/`, HTML pages, `/manifest.webmanifest`, and `/sw.js` receive `Cache-Control: no-cache, max-age=0, must-revalidate` so application updates remain discoverable.
+- The web manifest declares `application/manifest+json` through Azure's `mimeTypes` mapping.
+- Every response receives a self-only CSP, a minimal deny-by-default Permissions-Policy, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, and the existing strict referrer policy. The CSP permits only the local bundle, local worker, and the app's required local `blob:`/`data:` image sources; its narrowly scoped `style-src 'unsafe-inline'` is required by the workbench's dynamic canvas and sampled-colour style attributes.
+- Added exact regression coverage in `src/staticwebapp-config.test.ts`: immutable hashed JS/CSS caching, revalidating shell/manifest/service-worker caching, manifest MIME type, CSP, Permissions-Policy, frame protection, and nosniff.
 
-See [`.factory/verification.md`](verification.md) for commands, complete evidence, and P2/P3 remediation requirements. No product code was modified by the verifier.
+## Repair verification before deployment
+
+- Clean install: `npm ci` completed with 0 vulnerabilities. The pinned Playwright `1.62.1` needed its matching browser in this clean environment, so `npx playwright install chromium` was run as prescribed.
+- Type/lint: `npm run typecheck` and `npm run lint` passed (both run strict `tsc --noEmit`).
+- Tests: `npm test` passed — 6 Vitest tests (including 3 response-policy regressions) and 4 Playwright flows. The browser coverage includes desktop, 390 px mobile axe scans with no serious/critical findings, local image and PDF annotation, export/persistence, and an explicit offline reload using `context.setOffline(true)`.
+- Production build: `npm run build` passed and generated `dist/index.html` plus `dist/staticwebapp.config.json`. Initial JavaScript is 33.19 kB raw / 10.87 kB gzip and CSS is 20.41 kB raw / 5.18 kB gzip; the lazy PDF chunk remains 433.00 kB raw / 128.94 kB gzip.
+- Azure Static Web Apps emulator: confirmed the asset response's immutable cache header, shell/service-worker revalidation, manifest `Content-Type: application/manifest+json`, CSP, Permissions-Policy, and `X-Frame-Options`. The workbench and a local PDF render under that CSP with no console errors.
+- Keyboard smoke: `M` → arrow key → `Enter` opened the label composer; submitting the focused label input saved the annotation, and the next focused control had a visible outline.
+- `verify-url.sh` against the Azure emulator passed: HTTP 200, title, `lang=en`, one h1, main landmark, image alt coverage, no unlabeled buttons, and no console errors at desktop or 390 px.
+- Lighthouse 13.4.1 mobile against the Azure emulator: Performance 99, Accessibility 100, Best Practices 100, SEO 100; FCP 1.2 s, LCP 1.9 s, TBT 0 ms, CLS 0.
+- `npm audit --omit=dev`: 0 vulnerabilities. This is a private static application, so no package-consumer test applies.
+
+## Deployment and live verification
+
+- Deployed the static `dist/` artifact through `/opt/fleet/lib/deploy-static.sh color-context dist` to <https://color-context.sociobot.in/>.
+- Live SHA-256 values matched the locally rebuilt artifact for `index.html` (`745333c2b4f9b58440821cc35be4cd9b0c192cbda13eb77e4df4e5bb79f19c09`), `manifest.webmanifest` (`f168826e2949cee9020fc9f1bff24b6ae8b0c6d4a91a7db96570a952df5dbfe4`), `sw.js` (`0ece56cf78413018d3e5a2c70b3dd7a0a486186fc06a99a03ed5b99ed3cf3845`), and the entry script `assets/index-D8Ha1k46.js` (`36f2141fba353e57373a37b5d20447175d1aaa8bc0deb903fd2a8ff2f9230e4b`).
+- Live `/assets/index-D8Ha1k46.js` returns `Cache-Control: public, max-age=31536000, immutable`; `/`, `/privacy/`, `/terms/`, `/manifest.webmanifest`, and `/sw.js` return `no-cache, max-age=0, must-revalidate`. The manifest now returns `Content-Type: application/manifest+json`.
+- Live root, assets, manifest, service worker, privacy, and terms all return the CSP, Permissions-Policy, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, and strict referrer policy specified in the checked-in configuration.
+- Factory `verify-url.sh` against live passed: HTTP 200; expected title, language, h1, and main landmark; zero images without alt text; zero unlabeled buttons; and zero console/page errors. It also captured desktop and 390 px screenshots.
+- Live 390 px smoke passed with no horizontal overflow. Keyboard marking (`M`, arrow, `Enter`) saved a label, the persisted local file reopened after an offline reload, and all runtime requests stayed on `https://color-context.sociobot.in` with no console errors.
+- Lighthouse 13.4.1 mobile against live: Performance 100, Accessibility 100, Best Practices 100, SEO 100; FCP 1.0 s, LCP 1.2 s, TBT 0 ms, CLS 0.
 
 ## Shipped
 

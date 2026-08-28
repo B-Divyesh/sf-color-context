@@ -46,10 +46,16 @@ Install Playwright’s Chromium once in a new environment, then run the complete
 ```sh
 npx playwright install chromium
 npm test
+npm run typecheck
+npm run lint
 npm run build
 ```
 
 The exact production build command is `npm run build`. It writes the static deploy artifact to `./dist`, with `dist/index.html` at its root. Preview it with `npm run preview`.
+
+## Deploy
+
+This is an Azure Static Web Apps static deployment. Deploy the built `dist/` directory through the factory static deployment work order. `public/staticwebapp.config.json` is part of the artifact and must remain at the root of `dist/`; it provides the production CSP, frame protection, manifest MIME type, immutable caching for `/assets/*`, and revalidation for the HTML shell, manifest, and service worker.
 
 ## Data and privacy
 
