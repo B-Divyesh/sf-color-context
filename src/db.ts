@@ -26,22 +26,53 @@ function requestResult<T>(request: IDBRequest<T>): Promise<T> {
   });
 }
 
+/**
+ * A request becoming successful only means IndexedDB accepted it into the
+ * transaction. Navigation can still abort that transaction before it commits.
+ * Resolve writes at the transaction boundary so callers can safely render a
+ * "saved on this device" state or reload immediately afterwards.
+ */
+function transactionComplete(transaction: IDBTransaction): Promise<void> {
+  return new Promise((resolve, reject) => {
+    transaction.oncomplete = () => resolve();
+    transaction.onabort = () => reject(transaction.error ?? new Error('Local storage transaction was aborted.'));
+    transaction.onerror = () => reject(transaction.error ?? new Error('Local storage transaction failed.'));
+  });
+}
+
 export async function saveDocument(document: DocumentRecord): Promise<void> {
   const db = await openDatabase();
   const transaction = db.transaction(STORE_NAME, 'readwrite');
-  await requestResult(transaction.objectStore(STORE_NAME).put(document));
-  db.close();
+  const committed = transactionComplete(transaction);
+  transaction.objectStore(STORE_NAME).put(document);
+  try {
+    await committed;
+  } finally {
+    db.close();
+  }
 }
 
 export async function listDocuments(): Promise<DocumentRecord[]> {
   const db = await openDatabase();
-  const records = await requestResult(db.transaction(STORE_NAME).objectStore(STORE_NAME).getAll()) as DocumentRecord[];
-  db.close();
-  return records.sort((a, b) => b.updatedAt - a.updatedAt);
+  const transaction = db.transaction(STORE_NAME);
+  const completed = transactionComplete(transaction);
+  const records = await requestResult(transaction.objectStore(STORE_NAME).getAll()) as DocumentRecord[];
+  try {
+    await completed;
+    return records.sort((a, b) => b.updatedAt - a.updatedAt);
+  } finally {
+    db.close();
+  }
 }
 
 export async function deleteDocument(id: string): Promise<void> {
   const db = await openDatabase();
-  await requestResult(db.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).delete(id));
-  db.close();
+  const transaction = db.transaction(STORE_NAME, 'readwrite');
+  const committed = transactionComplete(transaction);
+  transaction.objectStore(STORE_NAME).delete(id);
+  try {
+    await committed;
+  } finally {
+    db.close();
+  }
 }

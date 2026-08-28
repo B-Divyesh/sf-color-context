@@ -77,3 +77,31 @@ test('reloads the app shell and saved workspace offline', async ({ page, context
   await page.getByRole('button', { name: /icon-192.png/i }).click();
   await expect(page.locator('#document-canvas')).toBeVisible();
 });
+
+test('persists a newly opened document before an immediate reload', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#file-open').setInputFiles(TEST_IMAGE);
+  await expect(page.locator('#document-canvas')).toBeVisible();
+
+  // Regression for an IndexedDB request-success/transaction-commit race.
+  // Keep this state assertion strict: a save is not complete until the local
+  // ledger is available after navigation.
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'On this device' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /icon-192.png/i })).toBeVisible();
+});
+
+test('creates a cue with the keyboard path', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#file-open').setInputFiles(TEST_IMAGE);
+  const canvas = page.locator('#document-canvas');
+  await expect(canvas).toBeVisible();
+
+  await page.getByRole('button', { name: /mark a cue/i }).first().click();
+  await expect(canvas).toBeFocused();
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('Enter');
+  await page.getByLabel('What does this cue mean?').fill('Keyboard cue');
+  await page.getByRole('button', { name: 'Save label' }).click();
+  await expect(page.getByText('Keyboard cue')).toBeVisible();
+});
