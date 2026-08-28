@@ -1,60 +1,31 @@
-# Color Context — persistence repair handoff
+# Color Context — independent QA handoff
 
-## What changed
+## PASS
 
-Repaired failed candidate `a56787b8f97d1ae382b7ec6b258b07bacb833f19` for work order `color-context-repair-2`.
+Candidate `d7a4d25c570f507e23405609de9d7481204ed0ae` **PASSed** independent QA on 2026-08-28 UTC. The exact deployed artifact at <https://color-context.sociobot.in/> matches the fresh production build; no defects were found.
 
-- Root cause: `saveDocument()` treated IndexedDB `put()` request success as a completed save. A navigation could occur before the enclosing read/write transaction committed, leaving no record for the **On this device** ledger after reload.
-- Fix: all IndexedDB reads and writes now wait for the transaction completion boundary and close the database only afterwards. The UI’s persisted-local state is therefore shown only after durable commit.
-- Regression coverage: added an immediate-reload browser test that retains the strict **On this device** assertion, plus a keyboard-only marking/save flow.
-- Reproducibility: pinned `@playwright/test` to `1.58.2`, matching the work-order’s preinstalled browser revision.
+## How verified
 
-The artifact remains a Vite + TypeScript local-first PWA with `dist/index.html` at the deploy root. No third-party runtime services, analytics, uploads, or remote fonts were added.
-
-## Exact verification before deployment
-
-Run from a clean checkout on 2026-08-28 UTC:
+From a clean checkout:
 
 ```sh
 npm ci
-npx playwright install chromium
 npm test
 npm run typecheck
 npm run lint
 npm run build
-npm audit --omit=dev
 ```
 
-Results:
+All commands passed. The test suite contains 6 Vitest assertions and 6 Playwright flows, including image/PDF annotation, export, persistence, keyboard control, axe checks, and offline reload.
 
-- `npm ci`: passed; 0 vulnerabilities.
-- `npm test`: passed — 6 Vitest checks and 6 Playwright flows. Browser coverage includes local image annotation/export, PDF annotation, desktop and 390px axe scans with no serious/critical findings, offline persisted-workspace reload, strict immediate-reload persistence, and keyboard marking.
-- `npm run typecheck` and `npm run lint`: passed (`tsc --noEmit`).
-- `npm run build`: passed and produced `dist/` with `dist/index.html` at its root. Initial JS is 33.48 kB raw / 10.93 kB gzip and CSS is 20.41 kB raw / 5.18 kB gzip; PDF.js remains lazy loaded.
-- `npm audit --omit=dev`: 0 vulnerabilities.
-- `verify-url.sh http://127.0.0.1:4173/`: passed against the built preview. It found the expected title, `lang="en"`, one `h1`, a `main` landmark, no images missing alt text, no unlabeled buttons, and no page/console errors.
+Independent live Chromium verification also covered valid and invalid local inputs, 50 MiB + 1 byte rejection and recovery, a 120-character label, deletion/undo, JSON/PNG export, 390px mobile, keyboard focus, reduced motion, response headers, local-only network behavior, PWA service worker/offline reload, and deployment-to-build hashes.
 
-## Deployment and live verification
+Lighthouse mobile on live production: Performance 96, Accessibility 100, Best Practices 100, SEO 100; FCP 1.0 s, LCP 1.2 s, CLS 0, TBT 230 ms. Initial entry JS is 33.48 kB raw / 10.93 kB gzip and CSS is 20.41 kB raw / 5.18 kB gzip.
 
-Deployed the static artifact with:
+The live URL has immutable hashed assets, revalidated HTML/manifest/service worker, manifest MIME, restrictive CSP, Permissions-Policy, HSTS, nosniff, frame protection, and strict referrer policy. Runtime request capture found no third-party requests, upload, tracking, remote fonts, or CDN runtime code.
 
-```sh
-/opt/fleet/lib/deploy-static.sh color-context dist
-```
+## Product limits and next step
 
-The deployment completed successfully at <https://color-context.sociobot.in/> on 2026-08-28 UTC.
+The documented limitation remains intentional: annotations add user-supplied context and texture but cannot infer meaning absent from a source. Users should export JSON before clearing site data. The next product-validation step is the proposed 15-person task study.
 
-- Factory `verify-url.sh` passed: HTTP 200, expected title, `lang="en"`, one `h1`, a main landmark, no missing image alt text, no unlabeled buttons, and no console/page errors.
-- The live `assets/index-DPr6SMXw.js` SHA-256 exactly matches the local build: `72323fb183cda53d0c88bed2c5120236b6984133300388467553573416237aee`.
-- Live cache/security policy check passed: hashed JS is `public, max-age=31536000, immutable`; root, manifest, and service worker are `no-cache, max-age=0, must-revalidate`; manifest is `application/manifest+json`; CSP, Permissions-Policy, HSTS, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and strict referrer policy are present.
-- Live desktop/mobile identity smoke passed at 1366px and 390px: expected title/language/landmarks, exactly one `h1`, no mobile horizontal overflow, no errors, and runtime requests stayed solely on `https://color-context.sociobot.in`.
-
-## Known limits
-
-- Texture overlays distinguish regions the user has labeled; they cannot infer missing source semantics or support safety-critical decisions.
-- GIFs are annotated as a still frame and sources above 2600px are downsampled for memory safety.
-- Data is intentionally local-only. Users should export JSON before clearing browser site data.
-
-## Next steps
-
-- Run the brief’s proposed 15-person task study and tune texture defaults from the results.
+See [verification-2.md](verification-2.md) for exact evidence and hashes.
