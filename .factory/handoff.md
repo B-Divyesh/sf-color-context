@@ -36,13 +36,18 @@ Results:
 
 ## Deployment and live verification
 
-The static artifact is deployed with:
+Deployed the static artifact with:
 
 ```sh
 /opt/fleet/lib/deploy-static.sh color-context dist
 ```
 
-Live deployment evidence is recorded below after the deployment completes.
+The deployment completed successfully at <https://color-context.sociobot.in/> on 2026-08-28 UTC.
+
+- Factory `verify-url.sh` passed: HTTP 200, expected title, `lang="en"`, one `h1`, a main landmark, no missing image alt text, no unlabeled buttons, and no console/page errors.
+- The live `assets/index-DPr6SMXw.js` SHA-256 exactly matches the local build: `72323fb183cda53d0c88bed2c5120236b6984133300388467553573416237aee`.
+- Live cache/security policy check passed: hashed JS is `public, max-age=31536000, immutable`; root, manifest, and service worker are `no-cache, max-age=0, must-revalidate`; manifest is `application/manifest+json`; CSP, Permissions-Policy, HSTS, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and strict referrer policy are present.
+- Live desktop/mobile identity smoke passed at 1366px and 390px: expected title/language/landmarks, exactly one `h1`, no mobile horizontal overflow, no errors, and runtime requests stayed solely on `https://color-context.sociobot.in`.
 
 ## Known limits
 
