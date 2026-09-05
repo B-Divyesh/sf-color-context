@@ -1,31 +1,48 @@
-# Color Context — independent QA handoff
+# Color Context — review 1 handoff
 
-## PASS
+## Verdict
 
-Candidate `d7a4d25c570f507e23405609de9d7481204ed0ae` **PASSed** independent QA on 2026-08-28 UTC. The exact deployed artifact at <https://color-context.sociobot.in/> matches the fresh production build; no defects were found.
+**FAIL — 8 findings and 16 untested public claims.**
 
-## How verified
+See [review-1.md](review-1.md) for the full evidence and required repairs.
 
-From a clean checkout:
+## What was reviewed
+
+- Live URL: <https://color-context.sociobot.in/>
+- Implementation candidate: `6f0db57b7817a1dfba09bc2a6736821bc2d16ee3`
+- Documentation base: `41c60f1c1782eabdc8bfa1672688568e8bec1ceb`
+- Fresh desktop and 390 px phone contexts
+- Normal, invalid, 50 MiB boundary, recovery, keyboard, focus, reduced-motion, theme, offline, persistence, export, import, privacy deletion, legal, link, metadata, and unknown-route paths
+- Prior verification findings and disclosed limits
+
+The live HTML, entry JavaScript, entry CSS, service worker, and manifest match the fresh candidate build byte for byte.
+
+## Main blockers
+
+1. The required one-click sample sandbox is absent.
+2. A workspace exported by the live app cannot be imported live because CSP blocks the app's `data:` fetch.
+3. `.factory/claims.json` is absent; 16 public claims have no required tagged tests.
+
+The first-screen, site-structure, keyboard-focus, touch-target, privacy-contact, and required-documentation gaps are also listed in the review.
+
+## Verification
+
+From a clean checkout, these passed:
 
 ```sh
 npm ci
+npx playwright install chromium
 npm test
 npm run typecheck
 npm run lint
 npm run build
+npm audit --omit=dev
 ```
 
-All commands passed. The test suite contains 6 Vitest assertions and 6 Playwright flows, including image/PDF annotation, export, persistence, keyboard control, axe checks, and offline reload.
+The suite passed 6 Vitest assertions and 6 Playwright flows. `dist/index.html` was produced. The factory live verifier passed. Live axe scans reported no violations across empty, populated, system, light, dark, desktop, mobile, legal, and offline states. Offline reopen and local deletion passed. Lighthouse wrote a complete 100/100/100/100 report with FCP 1.0 s, LCP 1.2 s, TBT 0 ms, and CLS 0, then its browser tab crashed during teardown.
 
-Independent live Chromium verification also covered valid and invalid local inputs, 50 MiB + 1 byte rejection and recovery, a 120-character label, deletion/undo, JSON/PNG export, 390px mobile, keyboard focus, reduced motion, response headers, local-only network behavior, PWA service worker/offline reload, and deployment-to-build hashes.
+## What remains
 
-Lighthouse mobile on live production: Performance 96, Accessibility 100, Best Practices 100, SEO 100; FCP 1.0 s, LCP 1.2 s, CLS 0, TBT 230 ms. Initial entry JS is 33.48 kB raw / 10.93 kB gzip and CSS is 20.41 kB raw / 5.18 kB gzip.
+Repair all eight findings, add the claim manifest and tagged tests, deploy the repaired artifact, and rerun strict review. Do not treat the passing local suite as proof of production import because the preview server does not apply the deployed CSP.
 
-The live URL has immutable hashed assets, revalidated HTML/manifest/service worker, manifest MIME, restrictive CSP, Permissions-Policy, HSTS, nosniff, frame protection, and strict referrer policy. Runtime request capture found no third-party requests, upload, tracking, remote fonts, or CDN runtime code.
-
-## Product limits and next step
-
-The documented limitation remains intentional: annotations add user-supplied context and texture but cannot infer meaning absent from a source. Users should export JSON before clearing site data. The next product-validation step is the proposed 15-person task study.
-
-See [verification-2.md](verification-2.md) for exact evidence and hashes.
+No product code or deployment was changed by this review.
