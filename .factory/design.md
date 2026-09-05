@@ -73,6 +73,19 @@ UI transitions run 160–240ms and animate only opacity and transform: the annot
 
 All interface icons and textures are hand-authored in repository HTML/CSS/canvas code. No stock assets, external fonts, or third-party runtime artwork are used.
 
+### Demo release board: `sample-release-board`
+
+- Use case: the one-click sample sandbox.
+- Subject: a believable Friday release-readiness board with a chart and three colored team-status indicators.
+- Source: hand-authored SVG at `assets/src/sample-release-board.svg`, rasterized into the shipped `public/assets/sample-release-board.webp` on 2026-09-05.
+- Purpose: the seeded labels show “Needs review before release,” “Search quality series,” and “Ready to ship” on meaningful source cues. This is product data, not a decorative hero.
+- License: original work commissioned for Color Context; no stock artwork or external runtime asset.
+
+### Social image: `color-context-social`
+
+- Source: a 1200×630 crop of the commissioned `color-garden-1200.jpg` artwork.
+- Purpose: Open Graph and Twitter preview only. The crop is derivative of the existing original generated artwork and contains no visitor-facing text.
+
 ## Why this fits
 
 People arrive with an ambiguous artifact, not with a desire to be “corrected.” A cartographer's garden frames annotation as authorship: the original terrain stays intact while texture, number, and language create an additional map. The editorial restraint keeps that metaphor human without obscuring the utility.

@@ -1,12 +1,19 @@
 import type { DocumentRecord } from './types';
 
-const DB_NAME = 'color-context';
 const STORE_NAME = 'documents';
 const VERSION = 1;
 
-function openDatabase(): Promise<IDBDatabase> {
+export type StorageNamespace = 'real' | 'demo';
+
+function databaseName(namespace: StorageNamespace): string {
+  // Demo data must never share a database with a visitor's real work. The
+  // explicit `demo:` prefix also makes it easy to identify and remove.
+  return namespace === 'demo' ? 'demo:color-context' : 'color-context';
+}
+
+function openDatabase(namespace: StorageNamespace): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, VERSION);
+    const request = indexedDB.open(databaseName(namespace), VERSION);
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -40,8 +47,8 @@ function transactionComplete(transaction: IDBTransaction): Promise<void> {
   });
 }
 
-export async function saveDocument(document: DocumentRecord): Promise<void> {
-  const db = await openDatabase();
+export async function saveDocument(document: DocumentRecord, namespace: StorageNamespace = 'real'): Promise<void> {
+  const db = await openDatabase(namespace);
   const transaction = db.transaction(STORE_NAME, 'readwrite');
   const committed = transactionComplete(transaction);
   transaction.objectStore(STORE_NAME).put(document);
@@ -52,8 +59,8 @@ export async function saveDocument(document: DocumentRecord): Promise<void> {
   }
 }
 
-export async function listDocuments(): Promise<DocumentRecord[]> {
-  const db = await openDatabase();
+export async function listDocuments(namespace: StorageNamespace = 'real'): Promise<DocumentRecord[]> {
+  const db = await openDatabase(namespace);
   const transaction = db.transaction(STORE_NAME);
   const completed = transactionComplete(transaction);
   const records = await requestResult(transaction.objectStore(STORE_NAME).getAll()) as DocumentRecord[];
@@ -65,11 +72,23 @@ export async function listDocuments(): Promise<DocumentRecord[]> {
   }
 }
 
-export async function deleteDocument(id: string): Promise<void> {
-  const db = await openDatabase();
+export async function deleteDocument(id: string, namespace: StorageNamespace = 'real'): Promise<void> {
+  const db = await openDatabase(namespace);
   const transaction = db.transaction(STORE_NAME, 'readwrite');
   const committed = transactionComplete(transaction);
   transaction.objectStore(STORE_NAME).delete(id);
+  try {
+    await committed;
+  } finally {
+    db.close();
+  }
+}
+
+export async function clearDocuments(namespace: StorageNamespace): Promise<void> {
+  const db = await openDatabase(namespace);
+  const transaction = db.transaction(STORE_NAME, 'readwrite');
+  const committed = transactionComplete(transaction);
+  transaction.objectStore(STORE_NAME).clear();
   try {
     await committed;
   } finally {

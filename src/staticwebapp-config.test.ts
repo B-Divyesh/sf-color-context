@@ -5,7 +5,8 @@ import { describe, expect, it } from 'vitest';
 type StaticWebAppConfig = {
   globalHeaders: Record<string, string>;
   mimeTypes: Record<string, string>;
-  routes: Array<{ route: string; headers?: Record<string, string> }>;
+  routes: Array<{ route: string; headers?: Record<string, string>; rewrite?: string }>;
+  responseOverrides: Record<string, { rewrite: string; statusCode: number }>;
 };
 
 const config = JSON.parse(
@@ -39,5 +40,13 @@ describe('Azure Static Web Apps release policy', () => {
     expect(headers['Permissions-Policy']).toContain('camera=()');
     expect(headers['X-Frame-Options']).toBe('DENY');
     expect(headers['X-Content-Type-Options']).toBe('nosniff');
+  });
+
+  it('uses the designed page with an HTTP 404 status for unknown paths', () => {
+    expect(config.responseOverrides['404']).toEqual({ rewrite: '/404.html', statusCode: 404 });
+  });
+
+  it('serves the direct demo URL from its dedicated document', () => {
+    expect(config.routes.find((route) => route.route === '/demo')?.rewrite).toBe('/demo/index.html');
   });
 });

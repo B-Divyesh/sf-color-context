@@ -158,6 +158,7 @@ a {
 
 .brand {
   display: inline-flex;
+  min-height: 44px;
   align-items: center;
   gap: 12px;
   max-width: max-content;
@@ -165,7 +166,8 @@ a {
   text-decoration: none;
 }
 
-.brand h1 {
+.brand strong {
+  display: block;
   margin: 0;
   font-family: "Arial Black", "Arial Narrow", ui-sans-serif, sans-serif;
   font-size: 19px;
@@ -227,6 +229,28 @@ a {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.site-nav a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 8px 10px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration-thickness: 1px;
+}
+
+.site-nav a:hover {
+  color: var(--ink);
 }
 
 .button,
@@ -297,6 +321,53 @@ a {
   font-weight: 700;
 }
 
+.demo-banner {
+  position: sticky;
+  z-index: 19;
+  top: var(--header-height);
+  display: flex;
+  min-height: 54px;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 6px max(20px, env(safe-area-inset-right)) 6px max(20px, env(safe-area-inset-left));
+  border-bottom: 2px solid var(--ink);
+  background: var(--acid);
+  color: var(--acid-ink);
+  font-size: 14px;
+}
+
+.demo-banner > span:first-child {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.demo-banner small {
+  font-size: 12px;
+}
+
+.demo-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.demo-actions button {
+  min-height: 38px;
+  padding: 6px 10px;
+  border: 1px solid var(--acid-ink);
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.demo-actions button:hover {
+  background: var(--acid-ink);
+  color: var(--acid);
+}
+
 .network-banner {
   background: var(--warning);
   color: #171107;
@@ -354,7 +425,7 @@ main {
   text-transform: uppercase;
 }
 
-.hero h2 {
+.hero h1 {
   max-width: 11ch;
   margin: 0;
   font-family: "Arial Black", "Arial Narrow", ui-sans-serif, sans-serif;
@@ -370,20 +441,40 @@ main {
   font-size: clamp(17px, 1.5vw, 20px);
 }
 
-.privacy-note {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin: 18px 0 0;
+.hero-primary {
+  display: grid;
+  gap: 6px;
+}
+
+.hero-primary small {
+  max-width: 33ch;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
 }
 
-.privacy-note span {
+.plain-facts {
   display: grid;
-  width: 28px;
-  height: 28px;
+  gap: 6px;
+  margin: 20px 0 0;
+  padding: 0;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+  list-style: none;
+}
+
+.plain-facts li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.plain-facts span {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  flex: none;
   place-items: center;
   border: 1px solid var(--line);
   border-radius: 50%;
@@ -411,22 +502,6 @@ main {
   height: auto;
   border: 2px solid var(--ink);
   background: #111923;
-}
-
-.hero-art > span {
-  position: absolute;
-  left: -18px;
-  bottom: 26px;
-  padding: 10px 14px;
-  border: 2px solid #171820;
-  background: #f5f0e5;
-  box-shadow: 5px 5px 0 #c7f23a;
-  color: #171820;
-  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
-  font-size: clamp(12px, 1.2vw, 16px);
-  font-weight: 800;
-  line-height: 1.25;
-  transform: rotate(-2deg);
 }
 
 .how-it-works,
@@ -558,6 +633,15 @@ main {
   display: grid;
   grid-template-columns: 132px minmax(360px, 1fr) minmax(300px, 380px);
   min-height: calc(100vh - var(--header-height));
+}
+
+.workspace-page-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 .tool-rail {
@@ -1108,6 +1192,12 @@ footer nav {
   justify-content: flex-end;
 }
 
+footer nav a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+}
+
 .toast {
   position: fixed;
   z-index: 50;
@@ -1218,6 +1308,20 @@ footer nav {
     padding: 10px 14px;
   }
 
+  .site-nav {
+    gap: 0;
+  }
+
+  .site-nav a {
+    min-height: 44px;
+    padding-inline: 6px;
+    font-size: 12px;
+  }
+
+  .site-nav a:nth-child(2) {
+    display: none;
+  }
+
   .brand small,
   .header-actions .button span {
     display: none;
@@ -1229,7 +1333,7 @@ footer nav {
     transform-origin: left center;
   }
 
-  .brand h1 {
+  .brand strong {
     font-size: 16px;
   }
 
@@ -1247,7 +1351,7 @@ footer nav {
     padding: 48px 20px 72px;
   }
 
-  .hero h2 {
+  .hero h1 {
     font-size: clamp(40px, 12vw, 56px);
   }
 
@@ -1260,13 +1364,20 @@ footer nav {
     flex-direction: column;
   }
 
-  .hero-art {
-    width: calc(100% - 10px);
+  .demo-banner {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+    padding: 9px 14px;
   }
 
-  .hero-art > span {
-    left: -8px;
-    bottom: -20px;
+  .demo-banner > span:first-child {
+    display: grid;
+    gap: 2px;
+  }
+
+  .hero-art {
+    width: calc(100% - 10px);
   }
 
   .how-it-works,

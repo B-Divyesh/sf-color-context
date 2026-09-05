@@ -1,0 +1,121 @@
+[
+  {
+    "id": "demo-isolation",
+    "claim": "The sample workspace is separate from real files and labels.",
+    "where": "Demo banner, Privacy page, README",
+    "test": "npm run test:e2e -- --grep \"@claim:demo-isolation\"",
+    "sandbox": "Start at /demo, reset the populated sample, create real local work, then return from demo and confirm the real work remains."
+  },
+  {
+    "id": "local-file-types-and-limit",
+    "claim": "Opens local images and PDFs up to 50 MB.",
+    "where": "How it works, README",
+    "test": "npm run test:e2e -- --grep \"@claim:local-file-types-and-limit\"",
+    "sandbox": "From /demo, open PNG, JPEG, WebP, GIF, and PDF files; accept an exact 50 MiB WebP, reject 50 MiB plus one byte, then recover with a PNG."
+  },
+  {
+    "id": "five-pixel-sampling",
+    "claim": "Samples a five-pixel area and shows a readable hex value.",
+    "where": "How it works, README",
+    "test": "npm run test:e2e -- --grep \"@claim:five-pixel-sampling\"",
+    "sandbox": "From /demo, mark a known status cue and assert a six-digit hex value is shown."
+  },
+  {
+    "id": "six-textures-and-callouts",
+    "claim": "Saves labels with six distinct textures and numbered callouts.",
+    "where": "README",
+    "test": "npm run test:e2e -- --grep \"@claim:six-textures-and-callouts\"",
+    "sandbox": "From /demo, save one label with each texture and assert all labels and their numbered callouts appear."
+  },
+  {
+    "id": "edit-move-delete-undo",
+    "claim": "Lets you edit, move, delete, and undo saved labels.",
+    "where": "README",
+    "test": "npm run test:e2e -- --grep \"@claim:edit-move-delete-undo\"",
+    "sandbox": "From /demo, edit a sample label, nudge it by keyboard, delete it, and restore it with Undo."
+  },
+  {
+    "id": "preserves-original-source",
+    "claim": "Keeps the original source unchanged.",
+    "where": "How it works, README",
+    "test": "npm run test:e2e -- --grep \"@claim:preserves-original-source\"",
+    "sandbox": "From /demo, export a workspace and compare its embedded source bytes with the shipped sample."
+  },
+  {
+    "id": "annotated-png-export",
+    "claim": "Downloads an annotated PNG.",
+    "where": "Export button, README",
+    "test": "npm run test:e2e -- --grep \"@claim:annotated-png-export\"",
+    "sandbox": "From /demo, export the populated canvas and assert a PNG download signature and annotated filename."
+  },
+  {
+    "id": "workspace-export-import",
+    "claim": "Exports and restores a JSON workspace.",
+    "where": "How it works, README",
+    "test": "npm run test:e2e -- --grep \"@claim:workspace-export-import\"",
+    "sandbox": "From /demo under the production connect-src policy, export a labeled workspace, remove it, import it, and assert the label returns."
+  },
+  {
+    "id": "local-persistence",
+    "claim": "Keeps saved work in this browser after a reload.",
+    "where": "README",
+    "test": "npm run test:e2e -- --grep \"@claim:local-persistence\"",
+    "sandbox": "From /demo, save a label, reload, and assert it remains visible."
+  },
+  {
+    "id": "pwa-shell",
+    "claim": "Provides an installable PWA shell.",
+    "where": "README",
+    "test": "npm run test:e2e -- --grep \"@claim:pwa-shell\"",
+    "sandbox": "From /demo, assert the manifest has standalone display and icons and that a service worker controls the page."
+  },
+  {
+    "id": "offline-reload",
+    "claim": "Works offline after the first visit.",
+    "where": "Landing facts, README",
+    "test": "npm run test:e2e -- --grep \"@claim:offline-reload\"",
+    "sandbox": "Fresh browser context at /demo, wait for service-worker control, go offline, reload, and assert the populated sample remains usable."
+  },
+  {
+    "id": "update-notice",
+    "claim": "Shows an update action when a fresh app version is ready.",
+    "where": "README",
+    "test": "npm run test:e2e -- --grep \"@claim:update-notice\"",
+    "sandbox": "From /demo, trigger the service-worker update event and assert the reload action is visible."
+  },
+  {
+    "id": "themes-mobile-and-keyboard",
+    "claim": "Supports theme choice, mobile layout, and keyboard labeling.",
+    "where": "README",
+    "test": "npm run test:e2e -- --grep \"@claim:themes-mobile-and-keyboard\"",
+    "sandbox": "From /demo at 390 px, change the theme and create a label with keyboard marking; assert no horizontal page overflow."
+  },
+  {
+    "id": "no-account-or-tracking",
+    "claim": "Uses no accounts, analytics, or tracking.",
+    "where": "Landing facts, Privacy page, README",
+    "test": "npm run test:e2e -- --grep \"@claim:no-account-or-tracking\"",
+    "sandbox": "Record every request during a sample labeling flow and assert every origin is the product origin."
+  },
+  {
+    "id": "self-hosted-runtime",
+    "claim": "Uses no remote fonts, third-party scripts, CDN, or external API.",
+    "where": "Privacy page, README",
+    "test": "npm run test:e2e -- --grep \"@claim:self-hosted-runtime\"",
+    "sandbox": "Record every request during a sample export and assert every origin is the product origin."
+  },
+  {
+    "id": "local-data-does-not-upload",
+    "claim": "Does not upload opened files or labels.",
+    "where": "Landing facts, Privacy page, README",
+    "test": "npm run test:e2e -- --grep \"@claim:local-data-does-not-upload\"",
+    "sandbox": "Record every request while opening and labeling a local file from /demo and assert all are same-origin GET requests."
+  },
+  {
+    "id": "free-no-payment",
+    "claim": "The utility is free and needs no account or payment.",
+    "where": "Landing facts, Terms page, README",
+    "test": "npm run test:e2e -- --grep \"@claim:free-no-payment\"",
+    "sandbox": "Assert the landing and Terms pages state the free, no-account, no-payment offering."
+  }
+]

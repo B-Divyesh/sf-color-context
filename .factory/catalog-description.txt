@@ -1,0 +1,1 @@
+Label color-only cues in local images and PDFs with personal names and textures.

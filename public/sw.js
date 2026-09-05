@@ -1,10 +1,12 @@
-const VERSION = 'color-context-v1';
+const VERSION = 'color-context-v2';
 const SHELL_CACHE = `${VERSION}-shell`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const BUILD_ASSETS = /*__BUILD_ASSETS__*/[];
 const SHELL = [
   '/',
   '/index.html',
+  '/demo/',
+  '/404.html',
   '/offline.html',
   '/manifest.webmanifest',
   '/assets/icon.svg',
@@ -16,6 +18,8 @@ const SHELL = [
   '/assets/color-garden-720.avif',
   '/assets/color-garden-1200.avif',
   '/assets/color-garden-1200.jpg',
+  '/assets/sample-release-board.webp',
+  '/assets/color-context-social.jpg',
   '/privacy/',
   '/terms/',
   ...BUILD_ASSETS

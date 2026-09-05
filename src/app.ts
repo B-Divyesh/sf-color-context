@@ -1,5 +1,5 @@
 import { drawComposite, hitTestAnnotation } from './canvas';
-import { deleteDocument, listDocuments, saveDocument } from './db';
+import { clearDocuments, deleteDocument, listDocuments, saveDocument, type StorageNamespace } from './db';
 import { PATTERNS, type Annotation, type DocumentRecord, type PatternName, type WorkspaceExport } from './types';
 import {
   MAX_FILE_BYTES,
@@ -52,8 +52,25 @@ function patternLabel(pattern: PatternName): string {
   return ({ diagonal: 'Diagonal', crosshatch: 'Crosshatch', dots: 'Dots', bars: 'Bars', checker: 'Checker', rings: 'Rings' })[pattern];
 }
 
+function isDemoLocation(): boolean {
+  return window.location.pathname.replace(/\/$/, '') === '/demo' || new URLSearchParams(window.location.search).get('demo') === '1';
+}
+
+const SAMPLE_DOCUMENT = {
+  name: 'release-status-sample.webp',
+  mime: 'image/webp',
+  source: '/assets/sample-release-board.webp',
+  annotations: [
+    { id: 'sample-needs-review', x: 850, y: 303, color: '#D47451', label: 'Needs review before release', pattern: 'crosshatch' as PatternName, page: 1, createdAt: 1, updatedAt: 1 },
+    { id: 'sample-key-series', x: 850, y: 431, color: '#694DD6', label: 'Search quality series', pattern: 'dots' as PatternName, page: 1, createdAt: 1, updatedAt: 1 },
+    { id: 'sample-ready', x: 850, y: 559, color: '#6DB36D', label: 'Ready to ship', pattern: 'checker' as PatternName, page: 1, createdAt: 1, updatedAt: 1 },
+  ],
+};
+
 export class ColorContextApp {
   private root: HTMLElement;
+  private readonly demo = isDemoLocation();
+  private readonly storageNamespace: StorageNamespace = this.demo ? 'demo' : 'real';
   private documents: DocumentRecord[] = [];
   private current: DocumentRecord | null = null;
   private baseCanvas = document.createElement('canvas');
@@ -86,12 +103,26 @@ export class ColorContextApp {
 
   async start(): Promise<void> {
     this.applyTheme(localStorage.getItem('color-context-theme') ?? 'system');
+    this.setRouteMetadata();
     try {
-      this.documents = await listDocuments();
+      this.documents = await listDocuments(this.storageNamespace);
+      if (this.demo) {
+        const sample = this.documents.find((document) => document.name === SAMPLE_DOCUMENT.name);
+        if (sample) await this.loadRecord(sample);
+        else await this.loadSample();
+      }
     } catch {
-      this.error = 'Local storage is unavailable. You can still annotate and export this session.';
+      this.error = this.demo
+        ? 'Sample storage is unavailable. You can still explore this session.'
+        : 'Local storage is unavailable. You can still annotate and export this session.';
     }
     this.render();
+  }
+
+  private setRouteMetadata(): void {
+    document.title = this.demo ? 'Demo — Color Context' : 'Color Context — label color-only cues';
+    const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    canonical?.setAttribute('href', `${window.location.origin}${this.demo ? '/demo' : '/'}`);
   }
 
   private applyTheme(theme: string): void {
@@ -103,25 +134,27 @@ export class ColorContextApp {
     const theme = document.documentElement.dataset.theme ?? 'system';
     this.root.innerHTML = `
       <header class="app-header">
-        <a class="brand" href="#main-content" aria-label="Color Context home">
+        <a class="brand" href="/" aria-label="Color Context home">
           <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
-          <span><h1>Color Context</h1><small>Name what color alone cannot tell you.</small></span>
+          <span><strong>Color Context</strong><small>Labels for color-only cues</small></span>
         </a>
+        <nav class="site-nav" aria-label="Product navigation"><a href="/demo">Demo</a><a href="/#how-it-works">How it works</a><a href="/privacy/">Privacy</a></nav>
         <div class="header-actions">
-          <button class="button button-primary" type="button" data-action="open"><span aria-hidden="true">＋</span> Open a file</button>
+          <button class="button button-primary" type="button" data-action="open"><span aria-hidden="true">＋</span> Open file</button>
           <button class="icon-button" type="button" data-action="theme" aria-label="Change color theme" title="Theme: ${escapeHtml(theme)}">◐</button>
         </div>
-        <input class="visually-hidden" id="file-open" type="file" aria-label="Choose an image or PDF" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf" />
-        <input class="visually-hidden" id="workspace-import" type="file" aria-label="Choose a Color Context workspace" accept="application/json,.json" />
+        <input class="visually-hidden" id="file-open" type="file" tabindex="-1" aria-label="Choose an image or PDF" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf" />
+        <input class="visually-hidden" id="workspace-import" type="file" tabindex="-1" aria-label="Choose a Color Context workspace" accept="application/json,.json" />
       </header>
-      ${!navigator.onLine ? '<div class="network-banner" role="status"><span aria-hidden="true">↯</span> Offline — the workbench and saved files remain available.</div>' : ''}
+      ${this.demo ? this.demoBannerTemplate() : ''}
+      ${!navigator.onLine ? '<div class="network-banner" role="status"><span aria-hidden="true">↯</span> Offline — saved files and labels remain available.</div>' : ''}
       <main id="main-content" tabindex="-1">
         ${this.error ? `<div class="error-banner" role="alert"><strong>Something needs attention.</strong> ${escapeHtml(this.error)} <button type="button" data-action="dismiss-error">Dismiss</button></div>` : ''}
-        ${this.current ? this.workspaceTemplate() : this.emptyTemplate()}
+        ${this.current ? '<h1 class="workspace-page-title">Label color-only cues in local files</h1>' + this.workspaceTemplate() : this.emptyTemplate()}
       </main>
       <footer>
-        <p>Private by design: files and labels stay in this browser unless you export them.</p>
-        <nav aria-label="Legal and product information"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><span>Original generated artwork · no tracking</span></nav>
+        <p>Files and labels stay in this browser unless you export them.</p>
+        <nav aria-label="Legal and product information"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><span>Built by Param Factory</span><span>v1.1.0</span></nav>
       </footer>
       <div class="sr-status" aria-live="polite" aria-atomic="true">${this.busy ? 'Loading document' : ''}</div>
       ${this.toastTemplate()}
@@ -130,40 +163,43 @@ export class ColorContextApp {
     if (this.draft) requestAnimationFrame(() => document.querySelector<HTMLInputElement>('#annotation-label')?.focus());
   }
 
+  private demoBannerTemplate(): string {
+    return `<aside class="demo-banner" aria-label="Demo controls"><span><strong>Demo — sample data, nothing is saved</strong><small>Your real files and labels are kept separate.</small></span><span class="demo-actions"><button type="button" data-action="reset-demo">Reset demo</button><button type="button" data-action="start-real">Start for real</button></span></aside>`;
+  }
+
   private emptyTemplate(): string {
     const recents = this.documents.length
-      ? `<section class="recent-section" aria-labelledby="recent-title"><div class="section-heading"><p class="eyebrow">Local ledger</p><h2 id="recent-title">On this device</h2></div><ul class="recent-list">${this.documents.map((item) => `
+      ? `<section class="recent-section" aria-labelledby="recent-title"><div class="section-heading"><p class="eyebrow">Saved files</p><h2 id="recent-title">On this device</h2></div><ul class="recent-list">${this.documents.map((item) => `
           <li><button type="button" data-open-id="${item.id}"><span class="file-glyph" aria-hidden="true">${item.mime === 'application/pdf' ? 'PDF' : 'IMG'}</span><span><strong>${escapeHtml(item.name)}</strong><small>${item.annotations.length} ${item.annotations.length === 1 ? 'label' : 'labels'} · ${escapeHtml(readableDate(item.updatedAt))}</small></span><span aria-hidden="true">→</span></button></li>`).join('')}</ul></section>`
       : '';
     return `
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-copy">
-          <p class="eyebrow">A private annotation workbench</p>
-          <h2 id="hero-title">Turn a color cue into something you can name.</h2>
-          <p class="hero-lede">Open a chart, status screenshot, or PDF. Sample the confusing cue, add your own meaning, and give it a high-contrast texture.</p>
+          <p class="eyebrow">Local image and PDF labels</p>
+          <h1 id="hero-title">Label color-only cues in local files</h1>
+          <p class="hero-lede">For people with color-vision deficiency who need to read charts, status indicators, or marked-up documents.</p>
           <div class="hero-actions">
-            <button class="button button-primary button-large" type="button" data-action="open">Open an image or PDF</button>
-            <button class="button button-quiet button-large" type="button" data-action="import">Import workspace</button>
+            <div class="hero-primary"><button class="button button-primary button-large" type="button" data-action="try-sample">Try it with sample data</button><small>Opens a populated status image with saved labels.</small></div>
+            <button class="button button-quiet button-large" type="button" data-action="open">Open your file</button>
           </div>
-          <p class="privacy-note"><span aria-hidden="true">⌁</span> Your file never leaves this device.</p>
+          <ul class="plain-facts"><li><span aria-hidden="true">⌁</span> Private: files stay in your browser.</li><li><span aria-hidden="true">↯</span> Offline: works after the first visit.</li><li><span aria-hidden="true">✓</span> Free: no account or payment.</li></ul>
         </div>
         <picture class="hero-art">
           <source media="(max-width: 720px)" srcset="/assets/color-garden-720.avif" type="image/avif" />
           <source srcset="/assets/color-garden-1200.avif" type="image/avif" />
           <source media="(max-width: 720px)" srcset="/assets/color-garden-720.webp" type="image/webp" />
           <source srcset="/assets/color-garden-1200.webp" type="image/webp" />
-          <img src="/assets/color-garden-1200.jpg" width="1200" height="800" alt="A surreal paper landscape of chart shapes with an eye-shaped opening filled with black-and-ivory textures." decoding="async" fetchpriority="high" />
-          <span aria-hidden="true">Color is the terrain.<br />Meaning is the map.</span>
+          <img src="/assets/color-garden-1200.jpg" width="1200" height="800" alt="An illustration of chart shapes marked with black-and-ivory textures." decoding="async" fetchpriority="high" />
         </picture>
       </section>
       <section class="how-it-works" aria-labelledby="how-title">
-        <div class="section-heading"><p class="eyebrow">Three moves</p><h2 id="how-title">Keep the original. Add context.</h2></div>
+        <div class="section-heading"><p class="eyebrow">How it works</p><h2 id="how-title">Add labels without changing the original</h2></div>
         <ol>
-          <li><span>01</span><h3>Open</h3><p>Use a PNG, JPEG, WebP, GIF, or PDF up to 50 MB.</p></li>
-          <li><span>02</span><h3>Mark + name</h3><p>Sample a cue, then attach a label and a distinct texture.</p></li>
-          <li><span>03</span><h3>Export</h3><p>Save an annotated PNG or a restorable local workspace.</p></li>
+          <li><span>01</span><h3>Open a file</h3><p>Open a local image or PDF up to 50 MB.</p></li>
+          <li><span>02</span><h3>Sample and label a cue</h3><p>Sample a five-pixel area, then add your own label and texture.</p></li>
+          <li><span>03</span><h3>Export your work</h3><p>Download an annotated PNG or a JSON workspace you can import later.</p></li>
         </ol>
-        <p class="honesty-note"><strong>Important:</strong> an overlay can make cues distinguishable, but it cannot recover meaning that the source never provides.</p>
+        <p class="honesty-note"><strong>What this does not do:</strong> it cannot infer meaning missing from a source or correct color vision.</p>
       </section>
       ${recents}
     `;
@@ -200,7 +236,7 @@ export class ColorContextApp {
           <p class="mode-hint" id="canvas-help"><span aria-hidden="true">${this.mode === 'mark' ? '⌖' : 'i'}</span>${modeHint}</p>
         </section>
         <aside class="ledger" aria-labelledby="ledger-title">
-          <div class="ledger-heading"><div><p class="eyebrow">Meaning ledger</p><h2 id="ledger-title">Labels <span>${visible.length}</span></h2></div><button class="compact-open" type="button" data-action="open">New file</button></div>
+          <div class="ledger-heading"><div><p class="eyebrow">Saved labels</p><h2 id="ledger-title">Labels <span>${visible.length}</span></h2></div><button class="compact-open" type="button" data-action="open">New file</button></div>
           ${this.draft ? this.annotationFormTemplate() : this.annotationListTemplate(visible)}
           <div class="source-note"><span aria-hidden="true">≠</span><p><strong>Texture adds a clue, not a diagnosis.</strong> Check the source or its author when the intended meaning is unknown.</p></div>
         </aside>
@@ -289,6 +325,9 @@ export class ColorContextApp {
     if (!action) return;
     if (action === 'open') document.querySelector<HTMLInputElement>('#file-open')?.click();
     else if (action === 'import') document.querySelector<HTMLInputElement>('#workspace-import')?.click();
+    else if (action === 'try-sample') window.location.assign('/demo');
+    else if (action === 'reset-demo') await this.resetDemo();
+    else if (action === 'start-real') await this.startForReal();
     else if (action === 'theme') this.cycleTheme();
     else if (action === 'dismiss-error') { this.error = ''; this.render(); }
     else if (action === 'mark') this.startMarking();
@@ -469,6 +508,48 @@ export class ColorContextApp {
     }
   }
 
+  private async loadSample(): Promise<void> {
+    const response = await fetch(SAMPLE_DOCUMENT.source);
+    if (!response.ok) throw new Error('The sample image could not be loaded. Reload and try again.');
+    const blob = await response.blob();
+    const now = Date.now();
+    const record: DocumentRecord = {
+      id: crypto.randomUUID(),
+      name: SAMPLE_DOCUMENT.name,
+      mime: SAMPLE_DOCUMENT.mime,
+      blob,
+      annotations: SAMPLE_DOCUMENT.annotations.map((annotation) => ({ ...annotation, id: crypto.randomUUID(), createdAt: now, updatedAt: now })),
+      page: 1,
+      pageCount: 1,
+      createdAt: now,
+      updatedAt: now,
+    };
+    await this.loadRecord(record);
+  }
+
+  private async resetDemo(): Promise<void> {
+    if (!this.demo) return;
+    this.busy = true;
+    this.render();
+    try {
+      await clearDocuments('demo');
+      this.documents = [];
+      this.current = null;
+      this.baseCanvas.width = 0;
+      await this.loadSample();
+      this.showToast('Demo reset to the original sample.');
+    } catch (error) {
+      this.busy = false;
+      this.error = `The demo could not be reset. ${error instanceof Error ? error.message : 'Reload and try again.'}`;
+      this.render();
+    }
+  }
+
+  private async startForReal(): Promise<void> {
+    if (this.demo) await clearDocuments('demo').catch(() => undefined);
+    window.location.assign('/');
+  }
+
   private async renderImage(blob: Blob): Promise<void> {
     const bitmap = await createImageBitmap(blob);
     const maximum = 2600;
@@ -525,7 +606,7 @@ export class ColorContextApp {
     if (!this.current) return;
     this.current.updatedAt = Date.now();
     try {
-      await saveDocument(this.current);
+      await saveDocument(this.current, this.storageNamespace);
       this.documents = [this.current, ...this.documents.filter((item) => item.id !== this.current?.id)];
       if (message) this.showToast(message);
       else this.render();
@@ -557,11 +638,11 @@ export class ColorContextApp {
   private async removeCurrentDocument(): Promise<void> {
     if (!this.current || !window.confirm(`Remove “${this.current.name}” and all of its local labels from this device? Export first if you want a backup.`)) return;
     const id = this.current.id;
-    await deleteDocument(id).catch(() => undefined);
     this.documents = this.documents.filter((item) => item.id !== id);
     this.current = null;
     this.baseCanvas.width = 0;
     this.render();
+    await deleteDocument(id, this.storageNamespace).catch(() => undefined);
     this.showToast('The local file and its labels were removed.');
   }
 
@@ -597,7 +678,7 @@ export class ColorContextApp {
     try {
       const payload: unknown = JSON.parse(await file.text());
       if (!validateWorkspace(payload)) throw new Error('The workspace structure is not recognized.');
-      const blob = await dataUrlToBlob(payload.document.dataUrl);
+      const blob = dataUrlToBlob(payload.document.dataUrl);
       if (blob.size > MAX_FILE_BYTES) throw new Error('The embedded source file exceeds 50 MB.');
       const now = Date.now();
       const record: DocumentRecord = { id: crypto.randomUUID(), name: payload.document.name, mime: payload.document.mime, blob, annotations: payload.document.annotations, page: payload.document.page, pageCount: 1, createdAt: now, updatedAt: now };
@@ -619,7 +700,12 @@ export class ColorContextApp {
   private showToast(message: string, action?: string, actionLabel?: string): void {
     this.toast = { message, action, actionLabel };
     if (this.toastTimer) window.clearTimeout(this.toastTimer);
-    if (!action) this.toastTimer = window.setTimeout(() => { this.toast = null; this.render(); }, 4500);
+    if (!action) this.toastTimer = window.setTimeout(() => {
+      this.toast = null;
+      // Removing only the transient notice preserves a label someone is
+      // currently typing. A full render here would reset that native input.
+      document.querySelector('.toast')?.remove();
+    }, 4500);
     this.render();
   }
 }

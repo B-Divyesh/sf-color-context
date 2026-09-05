@@ -61,9 +61,14 @@ export function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
-export async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
-  const response = await fetch(dataUrl);
-  return response.blob();
+export function dataUrlToBlob(dataUrl: string): Blob {
+  const match = /^data:([^;,]+);base64,([A-Za-z0-9+/]*={0,2})$/.exec(dataUrl);
+  if (!match) throw new Error('The embedded source is not a valid base64 data URL.');
+  const [, mime, encoded] = match;
+  const decoded = atob(encoded);
+  const bytes = new Uint8Array(decoded.length);
+  for (let index = 0; index < decoded.length; index += 1) bytes[index] = decoded.charCodeAt(index);
+  return new Blob([bytes], { type: mime });
 }
 
 export function downloadBlob(blob: Blob, filename: string): void {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { rgbToHex, validateWorkspace } from './utils';
+import { dataUrlToBlob, rgbToHex, validateWorkspace } from './utils';
 
 describe('rgbToHex', () => {
   it('clamps, rounds, and pads channel values', () => {
@@ -29,5 +29,13 @@ describe('workspace validation', () => {
       schema: 'color-context.workspace', version: 1,
       document: { name: 'x', mime: 'image/png', dataUrl: 'data:image/png;base64,AA==', page: 1, annotations: [{ x: -1 }] },
     })).toBe(false);
+  });
+});
+
+describe('workspace source decoding', () => {
+  it('decodes a base64 data URL without a network request', async () => {
+    const blob = dataUrlToBlob('data:image/png;base64,AQIDBA==');
+    expect(blob.type).toBe('image/png');
+    expect([...new Uint8Array(await blob.arrayBuffer())]).toEqual([1, 2, 3, 4]);
   });
 });
